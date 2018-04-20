@@ -1,10 +1,11 @@
-%matplotlib inline
+#%matplotlib inline
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import glob
 import os
 from astropy.io import fits
+from numba import jit
 
 
 class TUDAO(object):
@@ -13,30 +14,84 @@ class TUDAO(object):
     Entre com o caminho da pasta da noite de observacao da seguinte forma:
 		Nome da pasta = Data
 		Entrada da funcao = /home/ellen15/Data/		***nao esqueca da barra no final do caminho***
-    
-    '''	
-	def __init__(self, data_path):
+            
+    '''
+    @jit	
+    def __init__(self, data_path):
 		self.data_path = data_path
-		
-	def master_bias(self):
-		bias_files = glob.glob(data_path+'bias/*.fits')                 #lista com o caminho de todos os arquivos bias da noite
-		bias_fits = fits.getdata(bias_files)							#lista com todos os bias da noite
-		bias_fits = bias_fits.astype(np.float64)						#passando para float64
-		bias_median = np.median(bias_fits)								#cria a mediana de todas as imagens
-		hdu = fits.PrimaryHDU()	
-		hdu.data = median
-		hdu.writeto(data_path+'bias/master_bias.fits')					#salva o master_bias em um arquivo fits
 	
-
-	def master_flat(self):
-		ff_files = glob.glob(data_path+'flat_field/*.fits')             #lista com o caminho de todos os arquivos bias da noite
-		ff_fits = fits.getdata(ff_files)								#lista com todos os bias da noite
-		ff_fits = ff_fits.astype(np.float64)							#passando para float64
-		ff_median = np.median(ff_fits)									#cria a mediana de todas as imagens
-		hdu = fits.PrimaryHDU()	
-		hdu.data = median
-		hdu.writeto(data_path+'flat_field/master_ff.fits')				#salva o master_bias em um arquivo fits	
+	@jit
+    def matrix64(self,folder):
+        '''Funcao para tornar todos os arquivos fits de uma pasta em matrizes float64. Exemplo: '''									
+        files = np.sort(glob.glob(self.data_path+folder+'/*.fits'))		#lista o caminho de todos os arquivos da pasta	
+        files_fits = []
+        for i in range(len(files)):
+			#passa de fits para matriz utilizavel
+			matrix = fits.getdata(files[i])								
+			#passa os dados para float64
+			matrix = matrix.astype(np.float64)
+			#inclui o a matrix do fits na lista files_fits                          
+			files_fits.append(matrix)							        
+        #retorna TODAS as matrizes dos arquivos fits
+        return files_fits                                               
 		
-	def sci_bias(self):
-		sci_files = glob.glob(data_path+'science/*.fits')
-		sci_bias_files = 	
+	@jit	
+    def save_fits(self,folder,matrix,output):
+        hdu = fits.PrimaryHDU()
+        hdu.data = matrix
+        hdu.writeto(self.data_path+folder+'/'+output+'.fits')	
+			
+		
+    def master_bias(self,save=True):
+        bias_median = np.median(self.matrix64('bias'),axis=0)
+        #teste estatistico para verificar a confiabilidade do bias, ou seja, se a mediana esta perto de 1
+        teste = round(np.median(self.matrix64('bias')),2)
+        if (teste < 1.1) or (teste > 0.9):
+			if save == True:
+				self.save_fits('bias',bias_median,'master_bias')
+			else:
+				return bias_median	
+        else:
+            print('Voce e burro, cara.')    			                             
+	
+	
+    def master_flat(self,save=True):
+		#lista de flats em float64
+		flats = self.matrix64('flat_field')
+		#lista para adicionar os flats normalizados
+		normalized_flats = []
+		for i in range(len(flats)):
+			median = np.median(flats[i] - self.master_bias(False),axis=0)
+			#normaliza cada flat
+			normal = flats[i]/median
+			normalized_flats.append(normal)
+		#cria a mediana de todos os flats normalizados
+		ff_median = np.median(normalized_flats,axis=0)
+        #teste estatistico para verificar a confiabilidade do bias, ou seja, se a mediana esta perto de 1
+		teste = round(np.median(normalized_flats),2)
+		if (teste < 0.9) or (teste > 1.1):
+			if save == True:
+				self.save_fits('flat_field',ff_median,'master_flat_field')
+			else:
+				return ff_median	
+		else:
+			print('Como voce e burro, cara.')
+	
+		
+    def science(self):
+		sci_original_names = files = np.sort(glob.glob(self.data_path+'data/*.fits'))
+		#lista de imagens de ciencia em float64
+        sci_files = self.matrix64('science')
+        #lista de imagens de ciencia sem bias e flat
+        sci_final = []
+        for i in range(len(sci_files)):
+			#reduz o bias da imagem de ciencia
+			sci_bias = sci_files[i] - self.master_bias(save=False)
+			#reduz o flat da imagem de ciencia
+			sci_ff = sci_bias / self.master_flat(save=False)
+			hdu = fits.PrimaryHDU()
+			hdu.data = sci_ff
+			#salva a imagem de ciencia reduzida como nomeoriginal_red.fits
+			hdu.writeto(sci_original_names[i][:-5]+'_red.fits')
+			
+		 	
