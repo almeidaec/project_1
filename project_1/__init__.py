@@ -134,7 +134,7 @@ class TUDAO(object):
         r'''Função para obter as imagens de ciência reduzidas do bias e flat.
         Exemplo:
                 input = science()
-                Retorna todas as imagens de ciência renomeadas para nomeoriginal_red.fits na pasta 'red'.
+                Retorna todas as imagens de ciência renomeadas para nomeoriginal_red.fits na pasta 'science'.
 
         Primeiro a função subtrai o master_bias e depois divide pelo master_flat.
         '''
@@ -151,4 +151,4 @@ class TUDAO(object):
             hdu = fits.PrimaryHDU()
             hdu.data = sci_ff
 			#salva a imagem de ciencia reduzida como nomeoriginal_red.fits
-            hdu.writeto(sci_original_names[i][:30]+'red/'+sci_original_names[i][38:-5]+'_red.fits')
+            hdu.writeto(sci_original_names[i][:-5]+'_red.fits')

@@ -21,7 +21,7 @@ O pacote utiliza uma estrutura de pastas muito simples para fazer a redução.
   -bias           -> Pasta contendo APENAS os fits de bias
   -flat_field     -> Pasta contendo APENAS os fits de flat field
   -science        -> Pasta contendo APENAS os fits de ciência
-  -red            -> Pasta que será utilizada para salvar todas as imagens reduzidas (master_flat, master_bias e science_red)
+  -red            -> Pasta que será utilizada para salvar as imagens reduzidas master_flat e master_bias
 Então, antes de rodar qualquer função, crie as pastas citadas acima.
 
 $Executando as funções:
@@ -37,4 +37,3 @@ Ex. 'x.master_bias()' para executar a função master_bias
 Para mais informações, todas as funções têm informações adicionais. Basta executar o comando help(x.nomedafunção) para saber mais.
 
 $Observações importantes:
-      
