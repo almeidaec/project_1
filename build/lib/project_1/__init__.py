@@ -63,12 +63,12 @@ class TUDAO(object):
 
     def master_bias(self,save=True):
         r'''Função para obter o master_bias de uma noite de observação, ou seja, a combinação das medianas de todos os bias da noite.
-		Temos duas formas de saída para esta função:
+		Temos duas formas de saida para esta funcao:
 
 		 1 - Retorna o arquivo fits do master_bias
 				Exemplo:
 				         input = master_bias() ou master_bias(True) -> Como a opção 'True' é default, você pode optar por escrever ou não
-				         Retorna um arquivo chamado master_bias.fits na pasta red
+				         Retorna um arquivo chamado master_bias.fits na pasta bias
 
 		2 - Retorna a matriz master_bias (matriz utilizada para fazer operações matemáticas com os dados já que tem a forma float64)
 		        Exemplo:
@@ -84,7 +84,7 @@ class TUDAO(object):
         teste = round(np.median(self.matrix64('bias')),2)
         if (teste < 1.1) or (teste > 0.9):
             if save == True:
-                self.save_fits('red',bias_median,'master_bias')
+                self.save_fits('bias',bias_median,'master_bias')
             else:
                 return bias_median
         else:
@@ -98,7 +98,7 @@ class TUDAO(object):
 		 1 - Retorna o arquivo fits do master_flat_field
 				Exemplo:
 				         input = master_flat() ou master_flat(True) -> Como a opcão 'True' é default, você pode optar por escrever ou não
-				         Retorna um arquivo chamado master_flat_field.fits na pasta red
+				         Retorna um arquivo chamado master_flat_field.fits na pasta flat_field
 
 		2 - Retorna a matriz master_flat_field (matriz utilizada para fazer operações matemáticas com os dados já que tem a forma float64)
 		        Exemplo:
@@ -126,7 +126,7 @@ class TUDAO(object):
 		#cria a mediana de todos os flats normalizados
         ff_median = np.median(normalized_flats,axis=0)
         if save == True:
-            self.save_fits('red',ff_median,'master_flat_field')
+            self.save_fits('flat_field',ff_median,'master_flat_field')
         else:
             return ff_median
 
@@ -134,7 +134,7 @@ class TUDAO(object):
         r'''Função para obter as imagens de ciência reduzidas do bias e flat.
         Exemplo:
                 input = science()
-                Retorna todas as imagens de ciência renomeadas para nomeoriginal_red.fits na pasta 'red'.
+                Retorna todas as imagens de ciência renomeadas para nomeoriginal_red.fits na pasta 'science'.
 
         Primeiro a função subtrai o master_bias e depois divide pelo master_flat.
         '''
@@ -151,4 +151,4 @@ class TUDAO(object):
             hdu = fits.PrimaryHDU()
             hdu.data = sci_ff
 			#salva a imagem de ciencia reduzida como nomeoriginal_red.fits
-            hdu.writeto(sci_original_names[i][:30]+'red/'+sci_original_names[i][38:-5]+'_red.fits')
+            hdu.writeto(sci_original_names[i][:-5]+'_red.fits')
