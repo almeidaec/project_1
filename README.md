@@ -37,3 +37,5 @@ Ex. 'x.master_bias()' para executar a função master_bias
 Para mais informações, todas as funções têm informações adicionais. Basta executar o comando help(x.nomedafunção) para saber mais.
 
 $Observações importantes:
+Todas as funções possuem o comando help para qualquer dúdiva na utilização.
+Ex. 'help(x.master_bias) retornará instruções para a utilização da função master_bias
